@@ -241,86 +241,100 @@ setBarData([
         </button>
       </header>
 
-      <main className="main-content">
-        <form className="personal-form" onSubmit={handlePersonalAI}>
-          <div className="form-sections">
-            {/* Inputs on the top-left */}
-            <div className="personal-inputs">
-              <h2>Personal Info</h2>
-              <label>
-                Income (£):
-                <input
-                  type="number"
-                  name="income"
-                  value={personalData.income}
-                  onChange={handlePersonalChange}
-                />
-              </label>
-              <label>
-                Expenditure (£):
-                <input
-                  type="number"
-                  name="expenditure"
-                  value={personalData.expenditure}
-                  onChange={handlePersonalChange}
-                />
-              </label>
-              <label>
-                Investment (£/month):
-                <input
-                  type="number"
-                  name="invest"
-                  value={personalData.invest}
-                  onChange={handlePersonalChange}
-                />
-              </label>
-              <label>
-                Time (years):
-                <input
-                  type="number"
-                  name="years"
-                  placeholder="e.g., 5"
-                  value={personalData.years}
-                  onChange={handlePersonalChange}
-                />
-              </label>
-              <label>
-                Donation (£):
-                <input
-                  type="number"
-                  name="donate"
-                  value={personalData.donate}
-                  onChange={handlePersonalChange}
-                />
-              </label>
-              <label>
-                Savings (£/month):
-                <input
-                  type="number"
-                  name="save"
-                  value={personalData.save}
-                  onChange={handlePersonalChange}
-                />
-              </label>
-            </div>
+<main className="main-content">
+  <form
+    className="personal-form"
+    onSubmit={(e) => {
+      if (mode === "personal") handlePersonalAI(e);
+      else {
+        e.preventDefault();
+        alert(`General AI response for: ${query}`);
+      }
+    }}
+  >
+    <div className="form-sections">
+      {/* LEFT – Personal inputs: only show for personal mode */}
+      {mode === "personal" && (
+        <div className="personal-inputs">
+          <h2>Personal Info</h2>
+          <label>
+            Income (£):
+            <input
+              type="number"
+              name="income"
+              value={personalData.income}
+              onChange={handlePersonalChange}
+            />
+          </label>
+          <label>
+            Expenditure (£):
+            <input
+              type="number"
+              name="expenditure"
+              value={personalData.expenditure}
+              onChange={handlePersonalChange}
+            />
+          </label>
+          <label>
+            Investment (£/month):
+            <input
+              type="number"
+              name="invest"
+              value={personalData.invest}
+              onChange={handlePersonalChange}
+            />
+          </label>
+          <label>
+            Time (years):
+            <input
+              type="number"
+              name="years"
+              value={personalData.years}
+              onChange={handlePersonalChange}
+            />
+          </label>
+          <label>
+            Donation (£):
+            <input
+              type="number"
+              name="donate"
+              value={personalData.donate}
+              onChange={handlePersonalChange}
+            />
+          </label>
+          <label>
+            Savings (£/month):
+            <input
+              type="number"
+              name="save"
+              value={personalData.save}
+              onChange={handlePersonalChange}
+            />
+          </label>
+        </div>
+      )}
 
-            {/* AI Chatbox */}
-            <div className="ai-chatbox">
-              <h2>Ask AI Advisor</h2>
-              <input
-                type="text"
-                placeholder="Ask a finance question..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
-          </div>
+      {/* RIGHT – AI Chatbox: always show */}
+      <div className="ai-chatbox" style={{ flex: 1 }}>
+        <h2>Ask AI Advisor</h2>
+        <input
+          type="text"
+          placeholder={
+            mode === "personal"
+              ? "Ask a finance question..."
+              : "Ask a general finance question..."
+          }
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+    </div>
 
-          <button type="submit" className="submit-ai-btn">
-            Submit & View Charts
-          </button>
-        </form>
-      </main>
+    <button type="submit" className="submit-ai-btn">
+      {mode === "personal" ? "Submit & View Charts" : "Ask AI"}
+    </button>
+  </form>
+</main>
     </div>
   );
 }
