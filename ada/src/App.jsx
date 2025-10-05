@@ -17,7 +17,7 @@ import ReactMarkdown from "react-markdown";
 function App() {
   const [mode, setMode] = useState(null);
   const [query, setQuery] = useState("");
-  const [aiResponse, setAIResponse] = useState(""); // store AI response
+  const [aiResponse, setAIResponse] = useState("");
   const [personalData, setPersonalData] = useState({
     income: "",
     expenditure: "",
@@ -26,11 +26,11 @@ function App() {
     save: "",
     years: "",
   });
-  const [chartData, setChartData] = useState(null);
+  const [chartData, setChartData] = useState([]);
   const [barData, setBarData] = useState([]);
   const [showCharts, setShowCharts] = useState(false);
 
-  // ------------------- Typing Text for Hero -------------------
+  // ---------- Typing Text for Hero ----------
   const TYPING_TEXTS = [
     "Why do BOE rates affect mortgages?",
     "What is a Stocks and Shares ISA?",
@@ -78,45 +78,69 @@ function App() {
     );
   }
 
-  // ------------------- Handlers -------------------
+  // ---------- Helpers ----------
+  const toNum = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }; // Prefer explicit numeric coercion to avoid NaN/undefined propagating into charts. [web:21][web:22]
+
   const handlePersonalChange = (e) => {
     const { name, value } = e.target;
     setPersonalData((prev) => ({ ...prev, [name]: value }));
-  };
+  }; // Keep inputs controlled as strings, parse at usage sites. [web:21][web:22]
 
-  // Compound interest data for line chart
+  const switchMode = (m) => {
+    setMode(m);
+    // Reset cross-mode state to avoid stale UI and preserved state issues
+    setAIResponse("");
+    setShowCharts(false);
+    setChartData([]);
+    setBarData([]);
+    setQuery("");
+    if (m === "personal") {
+      setPersonalData({
+        income: "",
+        expenditure: "",
+        invest: "",
+        donate: "",
+        save: "",
+        years: "",
+      });
+    }
+  }; // Ensures state is reset when toggling branches to avoid preservation surprises. [web:16][web:34]
+
+  // ---------- Compound interest ----------
   const generateCompoundInterestData = (monthlyInvest, years) => {
-    const P = parseFloat(monthlyInvest);
-    const T = parseInt(years);
-    if (!P || P <= 0) {
-      setChartData(null);
+    const P = toNum(monthlyInvest);
+    const T = Math.max(0, Math.trunc(toNum(years)));
+    if (!(P > 0) || T <= 0) {
+      setChartData([]);
       return;
     }
 
     const r = 0.08;
     const n = 12;
-    const data = [];
-
-    for (let t = 1; t <= T; t++) {
+    const data = Array.from({ length: T }, (_, i) => {
+      const t = i + 1;
       const amount = P * ((Math.pow(1 + r / n, n * t) - 1) / (r / n));
-      data.push({ year: t, value: Math.round(amount) });
-    }
+      return { year: t, value: Math.round(amount) };
+    });
 
     setChartData(data);
-  };
+  }; // Guard against falsy/NaN values and produce consistent array output. [web:34]
 
   const calculateCompoundAfterT = (monthlyInvest, years) => {
-    const P = parseFloat(monthlyInvest);
-    const T = parseInt(years);
-    if (!P || !T || P <= 0 || T <= 0) return 0;
+    const P = toNum(monthlyInvest);
+    const T = Math.trunc(toNum(years));
+    if (!(P > 0) || T <= 0) return 0;
 
     const r = 0.08;
     const n = 12;
     const amount = P * ((Math.pow(1 + r / n, n * T) - 1) / (r / n));
     return Math.round(amount);
-  };
+  }; // Avoids NaN propagation by explicit guards and parsing. [web:34]
 
-  // ------------------- Unified Form Submission -------------------
+  // ---------- Submit ----------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -134,38 +158,57 @@ function App() {
       });
 
       const data = await res.json();
-      setAIResponse(data.response);
+      setAIResponse(data.response || "");
 
-      // Personal charts
       if (mode === "personal") {
-        generateCompoundInterestData(personalData.invest, personalData.years);
-        const compoundT = calculateCompoundAfterT(
-          personalData.invest,
-          personalData.years
-        );
+        // Parse and compute consistently
+        const income = toNum(personalData.income);
+        const expenditure = toNum(personalData.expenditure);
+        const invest = toNum(personalData.invest);
+        const donate = toNum(personalData.donate);
+        const save = toNum(personalData.save);
+        const years = Math.trunc(toNum(personalData.years));
 
-        setBarData([
+        // Build line data
+        generateCompoundInterestData(invest, years);
+        const compoundT = calculateCompoundAfterT(invest, years);
+
+        const excess = income - (expenditure + invest + donate + save);
+
+        // Ensure every datum has the same numeric keys: income, compound, value
+        const bars = [
+          { name: "Income & Compound", income, compound: compoundT, value: 0 },
           {
-            name: "Income & Compound",
-            income: Number(personalData.income) || 0,
-            compound: compoundT,
+            name: "Necessary Expenditure",
+            income: 0,
+            compound: 0,
+            value: expenditure,
           },
-          { name: 'Necessary Expenditure', value: Number(personalData.expenditure) || 0 },
-          { name: 'Excess', value: (Number(personalData.income) - (Number(personalData.expenditure) + Number(personalData.invest) + Number(personalData.donate) + Number(personalData.save))) || 0},
-          { name: 'Investment', value: Number(personalData.invest) || 0 },
-          { name: "Donation", value: Number(personalData.donate) || 0 },
-          { name: "Savings", value: Number(personalData.save) || 0 },
-        ]);
+          {
+            name: "Excess",
+            income: 0,
+            compound: 0,
+            value: Math.max(0, excess),
+          },
+          { name: "Investment", income: 0, compound: 0, value: invest },
+          { name: "Donation", income: 0, compound: 0, value: donate },
+          { name: "Savings", income: 0, compound: 0, value: save },
+        ];
+        setBarData(bars);
 
-        setShowCharts(true);
+        // Only show charts when inputs are valid enough to render meaningfully
+        const hasValid = invest > 0 && years > 0;
+        setShowCharts(hasValid);
+      } else {
+        setShowCharts(false);
       }
     } catch (err) {
       console.error(err);
       alert("Error connecting to AI backend.");
     }
-  };
+  }; // Resets and conditions ensure personal flow renders charts only when valid. [web:16][web:34]
 
-  // ------------------- Screens -------------------
+  // ---------- Screens ----------
 
   // HERO
   if (!mode) {
@@ -176,13 +219,13 @@ function App() {
         <div className="hero-buttons">
           <button
             className="hero-btn general"
-            onClick={() => setMode("general")}
+            onClick={() => switchMode("general")}
           >
             General
           </button>
           <button
             className="hero-btn personal"
-            onClick={() => setMode("personal")}
+            onClick={() => switchMode("personal")}
           >
             Personal
           </button>
@@ -199,7 +242,7 @@ function App() {
 
         <div className="ai-response">
           <h3>AI Response:</h3>
-          <ReactMarkdown> {aiResponse} </ReactMarkdown>
+          <ReactMarkdown>{aiResponse}</ReactMarkdown>
         </div>
 
         {/* Bar Chart */}
@@ -210,10 +253,12 @@ function App() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
+              <Tooltip formatter={(v) => `£${Number(v).toLocaleString()}`} />
               <Legend />
+              {/* income + compound stacked together */}
               <Bar dataKey="income" stackId="a" fill="#007aff" />
               <Bar dataKey="compound" stackId="a" fill="#00c49f" />
+              {/* other categories unstacked */}
               <Bar dataKey="value" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
@@ -232,8 +277,8 @@ function App() {
                 dataKey="year"
                 label={{ value: "Years", position: "insideBottom", offset: -5 }}
               />
-              <YAxis tickFormatter={(v) => `£${v.toLocaleString()}`} />
-              <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
+              <YAxis tickFormatter={(v) => `£${Number(v).toLocaleString()}`} />
+              <Tooltip formatter={(v) => `£${Number(v).toLocaleString()}`} />
               <Line
                 type="monotone"
                 dataKey="value"
@@ -258,20 +303,20 @@ function App() {
       <header className="header">
         <button
           className={mode === "personal" ? "active" : ""}
-          onClick={() => setMode("personal")}
+          onClick={() => switchMode("personal")}
         >
           Personal
         </button>
         <button
           className={mode === "general" ? "active" : ""}
-          onClick={() => setMode("general")}
+          onClick={() => switchMode("general")}
         >
           General
         </button>
       </header>
 
       <main className="main-content">
-        <form className="personal-form" onSubmit={handleSubmit}>
+        <form className="personal-form" onSubmit={handleSubmit} key={mode}>
           <div className="form-sections">
             {/* Personal inputs only */}
             {mode === "personal" && (
