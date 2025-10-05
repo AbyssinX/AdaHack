@@ -180,3 +180,37 @@ body, html {
 .personal-fields input:focus {
   border-color: #007aff;
 }
+
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 700px;
+}
+
+.chart-container h2 {
+  color: #007aff;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.back-btn {
+  margin-top: 20px;
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: #005fcc;
+}
