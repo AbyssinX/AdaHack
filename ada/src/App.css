@@ -8,17 +8,15 @@ body, html {
   overflow-x: hidden;
 }
 
-/* ------------------------- */
-/* HERO SCREEN               */
-/* ------------------------- */
+/* ---------------- HERO ---------------- */
 .hero {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
   width: 100%;
-  overflow: hidden; /* Prevent scrolling */
+  overflow: hidden;
   background: linear-gradient(135deg, #007aff, #00c6ff);
   color: white;
   text-align: center;
@@ -59,9 +57,7 @@ body, html {
   transform: scale(1.05);
 }
 
-/* ------------------------- */
-/* MAIN SECTION              */
-/* ------------------------- */
+/* ---------------- HEADER ---------------- */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -69,7 +65,6 @@ body, html {
   position: relative;
 }
 
-/* Header buttons (always visible at top) */
 .header {
   position: fixed;
   top: 20px;
@@ -96,80 +91,81 @@ body, html {
 }
 
 .header button:hover {
-  background-color: #d0d0d0;
+  background-color: #007aff;
+  color: white;
 }
 
-/* Centered main content */
+/* ---------------- MAIN CONTENT ---------------- */
 .main-content {
+  margin-top: 80px;
   display: flex;
   justify-content: center;
-  align-items: center;
-  flex-grow: 1;
-  height: 100vh;
+  align-items: flex-start;
+  padding: 20px;
 }
 
+/* General form */
 .search-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  background-color: #fff;
+  background-color: white;
   padding: 32px;
   border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 340px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.search-form h2 {
-  margin: 0;
-  color: #007aff;
-}
-
-.search-form input[type="text"] {
-  padding: 12px 16px;
-  font-size: 1rem;
-  width: 100%;
-  border: 1px solid #ccc;
+.search-form input {
+  padding: 10px;
   border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
   outline: none;
 }
 
-.search-form input[type="text"]:focus {
+.search-form input:focus {
   border-color: #007aff;
 }
 
-.search-form button {
-  padding: 12px 16px;
-  border: none;
-  background-color: #007aff;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
-  width: 100%;
+/* ---------------- PERSONAL FORM ---------------- */
+.personal-form {
+  display: flex;
+  flex-direction: column; /* stack sections */
+  gap: 24px;
+  background-color: white;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  width: 90%;
 }
 
-.search-form button:hover {
-  background-color: #005fcc;
+.form-sections {
+  display: flex;
+  gap: 40px;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
-/* Personal fields section */
-.personal-fields {
+.personal-inputs {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 100%;
+  gap: 12px;
+  flex: 1;
 }
 
-.personal-fields label {
+.personal-inputs h2 {
+  color: #007aff;
+}
+
+.personal-inputs label {
   display: flex;
   flex-direction: column;
   font-size: 0.9rem;
   color: #333;
 }
 
-.personal-fields input {
+.personal-inputs input {
   margin-top: 4px;
   padding: 8px;
   border: 1px solid #ccc;
@@ -177,10 +173,56 @@ body, html {
   font-size: 0.9rem;
 }
 
-.personal-fields input:focus {
+.personal-inputs input:focus {
   border-color: #007aff;
+  outline: none;
 }
 
+.ai-chatbox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  border-left: 1px solid #eee;
+  padding-left: 24px;
+}
+
+.ai-chatbox h2 {
+  color: #007aff;
+}
+
+.ai-chatbox input {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.ai-chatbox input:focus {
+  border-color: #007aff;
+  outline: none;
+}
+
+/* Unified submit button */
+.submit-ai-btn {
+  margin-top: 20px;
+  background-color: #007aff;
+  color: white;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  width: 100%;
+  transition: background-color 0.2s ease;
+}
+
+.submit-ai-btn:hover {
+  background-color: #005fcc;
+}
+
+/* ---------------- CHART ---------------- */
 .chart-container {
   display: flex;
   flex-direction: column;
@@ -199,7 +241,6 @@ body, html {
   text-align: center;
 }
 
-/* Ensure chart container text isn’t clipped */
 .recharts-wrapper {
   overflow: visible !important;
 }
@@ -214,11 +255,6 @@ body, html {
   font-weight: 600;
 }
 
-.recharts-tooltip-item {
-  font-size: 0.9rem;
-}
-
-/* Back button styling */
 .back-btn {
   margin-top: 20px;
   background-color: #007aff;
