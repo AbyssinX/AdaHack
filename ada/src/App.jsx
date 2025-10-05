@@ -16,18 +16,18 @@ import "./App.css";
 function App() {
   const [mode, setMode] = useState(null);
   const [query, setQuery] = useState("");
+  const [aiResponse, setAIResponse] = useState(""); // store AI response
   const [personalData, setPersonalData] = useState({
     income: "",
     expenditure: "",
     invest: "",
     donate: "",
     save: "",
-    years: "",          // 👈 new field for time input
+    years: "",
   });
-
-  const [chartData, setChartData] = useState(null);   // for line chart
-  const [barData, setBarData] = useState([]);         // for financial breakdown
-  const [showCharts, setShowCharts] = useState(false); // page toggle
+  const [chartData, setChartData] = useState(null);
+  const [barData, setBarData] = useState([]);
+  const [showCharts, setShowCharts] = useState(false);
 
   // ------------------- Typing Text for Hero -------------------
   const TYPING_TEXTS = [
@@ -83,7 +83,7 @@ function App() {
     setPersonalData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Generate compound interest data for line chart
+  // Compound interest data for line chart
   const generateCompoundInterestData = (monthlyInvest, years) => {
     const P = parseFloat(monthlyInvest);
     const T = parseInt(years);
@@ -92,7 +92,7 @@ function App() {
       return;
     }
 
-    const r = 0.08;  // annual interest
+    const r = 0.08;
     const n = 12;
     const data = [];
 
@@ -104,7 +104,6 @@ function App() {
     setChartData(data);
   };
 
-  // Calculate compound interest after t years for bar chart
   const calculateCompoundAfterT = (monthlyInvest, years) => {
     const P = parseFloat(monthlyInvest);
     const T = parseInt(years);
@@ -116,32 +115,52 @@ function App() {
     return Math.round(amount);
   };
 
-  const handlePersonalAI = (e) => {
+  // ------------------- Unified Form Submission -------------------
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Generate line chart for full 30 years
-    generateCompoundInterestData(personalData.invest, personalData.years);
+    try {
+      const payload = {
+        mode,
+        question: query,
+        personalData: mode === "personal" ? personalData : null,
+      };
 
-    // Compute compound after user-defined time
-    const compoundT = calculateCompoundAfterT(
-      personalData.invest,
-      personalData.years
-    );
+      const res = await fetch("http://localhost:8000/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    // Update financial breakdown
-setBarData([
-  {
-    name: 'Income & Compound',
-    income: Number(personalData.income) || 0,
-    compound: compoundT
-  },
-  { name: 'Expenditure', value: Number(personalData.expenditure) || 0 },
-  { name: 'Investment', value: Number(personalData.invest) || 0 },
-  { name: 'Donation', value: Number(personalData.donate) || 0 },
-  { name: 'Savings', value: Number(personalData.save) || 0 }
-]);
+      const data = await res.json();
+      setAIResponse(data.response);
 
-    setShowCharts(true);
+      // Personal charts
+      if (mode === "personal") {
+        generateCompoundInterestData(personalData.invest, personalData.years);
+        const compoundT = calculateCompoundAfterT(
+          personalData.invest,
+          personalData.years
+        );
+
+        setBarData([
+          {
+            name: "Income & Compound",
+            income: Number(personalData.income) || 0,
+            compound: compoundT,
+          },
+          { name: "Expenditure", value: Number(personalData.expenditure) || 0 },
+          { name: "Investment", value: Number(personalData.invest) || 0 },
+          { name: "Donation", value: Number(personalData.donate) || 0 },
+          { name: "Savings", value: Number(personalData.save) || 0 },
+        ]);
+
+        setShowCharts(true);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error connecting to AI backend.");
+    }
   };
 
   // ------------------- Screens -------------------
@@ -153,10 +172,16 @@ setBarData([
         <h1>Your Personal Financial Advisor</h1>
         <TypingText />
         <div className="hero-buttons">
-          <button className="hero-btn general" onClick={() => setMode("general")}>
+          <button
+            className="hero-btn general"
+            onClick={() => setMode("general")}
+          >
             General
           </button>
-          <button className="hero-btn personal" onClick={() => setMode("personal")}>
+          <button
+            className="hero-btn personal"
+            onClick={() => setMode("personal")}
+          >
             Personal
           </button>
         </div>
@@ -170,28 +195,27 @@ setBarData([
       <div className="chart-page">
         <h2>Financial Overview</h2>
 
+        <div className="ai-response">
+          <h3>AI Response:</h3>
+          <p>{aiResponse}</p>
+        </div>
+
         {/* Bar Chart */}
         <div className="chart-container">
-        <h3>Financial Breakdown</h3>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={barData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
-            <Legend />
-
-            {/* stack on first bar */}
-            <Bar dataKey="income" stackId="a" fill="#007aff" />
-            <Bar dataKey="compound" stackId="a" fill="#00c49f" />
-
-            {/* other categories drawn as single bars */}
-            <Bar dataKey="value" fill="#8884d8" />
-          </BarChart>
-
-        </ResponsiveContainer>
-      </div>
-
+          <h3>Financial Breakdown</h3>
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={barData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
+              <Legend />
+              <Bar dataKey="income" stackId="a" fill="#007aff" />
+              <Bar dataKey="compound" stackId="a" fill="#00c49f" />
+              <Bar dataKey="value" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Line Chart */}
         <div className="chart-container">
@@ -202,7 +226,10 @@ setBarData([
               margin={{ top: 20, right: 40, left: 40, bottom: 40 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="year" label={{ value: "Years", position: "insideBottom", offset: -5 }} />
+              <XAxis
+                dataKey="year"
+                label={{ value: "Years", position: "insideBottom", offset: -5 }}
+              />
               <YAxis tickFormatter={(v) => `£${v.toLocaleString()}`} />
               <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
               <Line
@@ -223,7 +250,7 @@ setBarData([
     );
   }
 
-  // PERSONAL FORM PAGE
+  // PERSONAL / GENERAL FORM PAGE
   return (
     <div className="app-container">
       <header className="header">
@@ -241,100 +268,99 @@ setBarData([
         </button>
       </header>
 
-<main className="main-content">
-  <form
-    className="personal-form"
-    onSubmit={(e) => {
-      if (mode === "personal") handlePersonalAI(e);
-      else {
-        e.preventDefault();
-        alert(`General AI response for: ${query}`);
-      }
-    }}
-  >
-    <div className="form-sections">
-      {/* LEFT – Personal inputs: only show for personal mode */}
-      {mode === "personal" && (
-        <div className="personal-inputs">
-          <h2>Personal Info</h2>
-          <label>
-            Income (£):
-            <input
-              type="number"
-              name="income"
-              value={personalData.income}
-              onChange={handlePersonalChange}
-            />
-          </label>
-          <label>
-            Expenditure (£):
-            <input
-              type="number"
-              name="expenditure"
-              value={personalData.expenditure}
-              onChange={handlePersonalChange}
-            />
-          </label>
-          <label>
-            Investment (£/month):
-            <input
-              type="number"
-              name="invest"
-              value={personalData.invest}
-              onChange={handlePersonalChange}
-            />
-          </label>
-          <label>
-            Time (years):
-            <input
-              type="number"
-              name="years"
-              value={personalData.years}
-              onChange={handlePersonalChange}
-            />
-          </label>
-          <label>
-            Donation (£):
-            <input
-              type="number"
-              name="donate"
-              value={personalData.donate}
-              onChange={handlePersonalChange}
-            />
-          </label>
-          <label>
-            Savings (£/month):
-            <input
-              type="number"
-              name="save"
-              value={personalData.save}
-              onChange={handlePersonalChange}
-            />
-          </label>
-        </div>
-      )}
+      <main className="main-content">
+        <form className="personal-form" onSubmit={handleSubmit}>
+          <div className="form-sections">
+            {/* Personal inputs only */}
+            {mode === "personal" && (
+              <div className="personal-inputs">
+                <h2>Personal Info</h2>
+                <label>
+                  Income (£):
+                  <input
+                    type="number"
+                    name="income"
+                    value={personalData.income}
+                    onChange={handlePersonalChange}
+                  />
+                </label>
+                <label>
+                  Expenditure (£):
+                  <input
+                    type="number"
+                    name="expenditure"
+                    value={personalData.expenditure}
+                    onChange={handlePersonalChange}
+                  />
+                </label>
+                <label>
+                  Investment (£/month):
+                  <input
+                    type="number"
+                    name="invest"
+                    value={personalData.invest}
+                    onChange={handlePersonalChange}
+                  />
+                </label>
+                <label>
+                  Time (years):
+                  <input
+                    type="number"
+                    name="years"
+                    value={personalData.years}
+                    onChange={handlePersonalChange}
+                  />
+                </label>
+                <label>
+                  Donation (£):
+                  <input
+                    type="number"
+                    name="donate"
+                    value={personalData.donate}
+                    onChange={handlePersonalChange}
+                  />
+                </label>
+                <label>
+                  Savings (£/month):
+                  <input
+                    type="number"
+                    name="save"
+                    value={personalData.save}
+                    onChange={handlePersonalChange}
+                  />
+                </label>
+              </div>
+            )}
 
-      {/* RIGHT – AI Chatbox: always show */}
-      <div className="ai-chatbox" style={{ flex: 1 }}>
-        <h2>Ask AI Advisor</h2>
-        <input
-          type="text"
-          placeholder={
-            mode === "personal"
-              ? "Ask a finance question..."
-              : "Ask a general finance question..."
-          }
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-    </div>
+            {/* AI Chatbox */}
+            <div className="ai-chatbox" style={{ flex: 1 }}>
+              <h2>Ask AI Advisor</h2>
+              <input
+                type="text"
+                placeholder={
+                  mode === "personal"
+                    ? "Ask a finance question..."
+                    : "Ask a general finance question..."
+                }
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+          </div>
 
-    <button type="submit" className="submit-ai-btn">
-      {mode === "personal" ? "Submit & View Charts" : "Ask AI"}
-    </button>
-  </form>
-</main>
+          <button type="submit" className="submit-ai-btn">
+            {mode === "personal" ? "Submit & View Charts" : "Ask AI"}
+          </button>
+        </form>
+
+        {/* Show AI response for general mode */}
+        {mode === "general" && aiResponse && (
+          <div className="ai-response">
+            <h3>AI Response:</h3>
+            <p>{aiResponse}</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
