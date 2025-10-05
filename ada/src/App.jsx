@@ -84,8 +84,9 @@ function App() {
   };
 
   // Generate compound interest data for line chart
-  const generateCompoundInterestData = (monthlyInvest) => {
+  const generateCompoundInterestData = (monthlyInvest, years) => {
     const P = parseFloat(monthlyInvest);
+    const T = parseInt(years);
     if (!P || P <= 0) {
       setChartData(null);
       return;
@@ -93,10 +94,9 @@ function App() {
 
     const r = 0.08;  // annual interest
     const n = 12;
-    const years = 30;
     const data = [];
 
-    for (let t = 1; t <= years; t++) {
+    for (let t = 1; t <= T; t++) {
       const amount = P * ((Math.pow(1 + r / n, n * t) - 1) / (r / n));
       data.push({ year: t, value: Math.round(amount) });
     }
@@ -120,7 +120,7 @@ function App() {
     e.preventDefault();
 
     // Generate line chart for full 30 years
-    generateCompoundInterestData(personalData.invest);
+    generateCompoundInterestData(personalData.invest, personalData.years);
 
     // Compute compound after user-defined time
     const compoundT = calculateCompoundAfterT(
@@ -195,7 +195,7 @@ setBarData([
 
         {/* Line Chart */}
         <div className="chart-container">
-          <h3>Investment Growth Over 30 Years</h3>
+          <h3>Investment Growth</h3>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart
               data={chartData}
