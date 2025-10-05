@@ -129,14 +129,17 @@ function App() {
     );
 
     // Update financial breakdown
-    setBarData([
-      { name: `Compound Interest\n(after ${personalData.years} yrs)`, amount: compoundT },
-      { name: "Income", amount: Number(personalData.income) || 0 },
-      { name: "Expenditure", amount: Number(personalData.expenditure) || 0 },
-      { name: "Investment", amount: Number(personalData.invest) || 0 },
-      { name: "Donation", amount: Number(personalData.donate) || 0 },
-      { name: "Savings", amount: Number(personalData.save) || 0 },
-    ]);
+setBarData([
+  {
+    name: 'Income & Compound',
+    income: Number(personalData.income) || 0,
+    compound: compoundT
+  },
+  { name: 'Expenditure', value: Number(personalData.expenditure) || 0 },
+  { name: 'Investment', value: Number(personalData.invest) || 0 },
+  { name: 'Donation', value: Number(personalData.donate) || 0 },
+  { name: 'Savings', value: Number(personalData.save) || 0 }
+]);
 
     setShowCharts(true);
   };
@@ -172,37 +175,20 @@ function App() {
         <h3>Financial Breakdown</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={barData}>
-            
-            <defs>
-              <pattern
-                id="compoundPattern"
-                patternUnits="userSpaceOnUse"
-                width={6}
-                height={6}
-              >
-                <rect width="6" height="6" fill="#ccf5e1" /> {/* light green background */}
-                <path d="M0,0 L6,6" stroke="#00c49f" strokeWidth="1" />
-              </pattern>
-            </defs>
-
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
             <Legend />
 
-            {/* For the Income category, show two stacked bars */}
-            <Bar dataKey="income" fill="#007aff" stackId="incomeStack" name="Income" />
-            <Bar
-              dataKey="compound"
-              fill="#00c49f"
-              stackId="incomeStack"
-              name={`Compound Interest (after ${personalData.years} yrs)`}
-            />
+            {/* stack on first bar */}
+            <Bar dataKey="income" stackId="a" fill="#007aff" />
+            <Bar dataKey="compound" stackId="a" fill="#00c49f" />
 
-            {/* For other categories use a single bar */}
-            <Bar dataKey="value" fill="#8884d8" name="Other Categories" />
+            {/* other categories drawn as single bars */}
+            <Bar dataKey="value" fill="#8884d8" />
           </BarChart>
+
         </ResponsiveContainer>
       </div>
 
