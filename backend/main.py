@@ -4,6 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from huggingface_hub import InferenceClient
 import os
 
+from dotenv import load_dotenv
+
+# Load variables from .env (placed in project root)
+load_dotenv()
+
+HF_API_KEY = os.getenv("HF_API_KEY")  # or os.environ["HF_API_KEY"] to require it
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -19,7 +26,6 @@ class Query(BaseModel):
     personalData: dict | None = None
 
 
-HF_API_KEY = "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"  # set in env; do not hardcode
 if not HF_API_KEY:
     raise RuntimeError("HF_API_KEY is not set")
 

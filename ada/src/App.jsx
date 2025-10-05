@@ -12,6 +12,7 @@ import {
   Legend,
 } from "recharts";
 import "./App.css";
+import ReactMarkdown from "react-markdown";
 
 function App() {
   const [mode, setMode] = useState(null);
@@ -197,7 +198,7 @@ function App() {
 
         <div className="ai-response">
           <h3>AI Response:</h3>
-          <p>{aiResponse}</p>
+          <ReactMarkdown> {aiResponse} </ReactMarkdown>
         </div>
 
         {/* Bar Chart */}
@@ -357,7 +358,7 @@ function App() {
         {mode === "general" && aiResponse && (
           <div className="ai-response">
             <h3>AI Response:</h3>
-            <p>{aiResponse}</p>
+            <ReactMarkdown>{aiResponse}</ReactMarkdown>
           </div>
         )}
       </main>

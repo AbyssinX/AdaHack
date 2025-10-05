@@ -383,3 +383,25 @@ body, html {
   opacity: 1;
   stroke-width: 2;
 }
+
+.markdown-output {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 10px;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.markdown-output h1,
+.markdown-output h2,
+.markdown-output h3 {
+  margin-top: 1rem;
+  color: #007aff;
+}
+
+.markdown-output code {
+  background: #eef;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: monospace;
+}
