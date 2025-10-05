@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # Load variables from .env (placed in project root)
 load_dotenv()
 
-HF_API_KEY = os.getenv("HF_API_KEY")  # or os.environ["HF_API_KEY"] to require it
+HF_API_KEY = os.getenv("HF_API_KEY")  
 
 app = FastAPI()
 app.add_middleware(

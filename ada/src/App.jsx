@@ -82,16 +82,16 @@ function App() {
   const toNum = (v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
-  }; // Prefer explicit numeric coercion to avoid NaN/undefined propagating into charts. [web:21][web:22]
+  }; 
 
   const handlePersonalChange = (e) => {
     const { name, value } = e.target;
     setPersonalData((prev) => ({ ...prev, [name]: value }));
-  }; // Keep inputs controlled as strings, parse at usage sites. [web:21][web:22]
+  }; 
 
   const switchMode = (m) => {
     setMode(m);
-    // Reset cross-mode state to avoid stale UI and preserved state issues
+   
     setAIResponse("");
     setShowCharts(false);
     setChartData([]);
@@ -107,7 +107,7 @@ function App() {
         years: "",
       });
     }
-  }; // Ensures state is reset when toggling branches to avoid preservation surprises. [web:16][web:34]
+  }; 
 
   // ---------- Compound interest ----------
   const generateCompoundInterestData = (monthlyInvest, years) => {
@@ -127,7 +127,7 @@ function App() {
     });
 
     setChartData(data);
-  }; // Guard against falsy/NaN values and produce consistent array output. [web:34]
+  }; 
 
   const calculateCompoundAfterT = (monthlyInvest, years) => {
     const P = toNum(monthlyInvest);
@@ -138,7 +138,7 @@ function App() {
     const n = 12;
     const amount = P * ((Math.pow(1 + r / n, n * T) - 1) / (r / n));
     return Math.round(amount);
-  }; // Avoids NaN propagation by explicit guards and parsing. [web:34]
+  }; 
 
   // ---------- Submit ----------
   const handleSubmit = async (e) => {
@@ -161,7 +161,7 @@ function App() {
       setAIResponse(data.response || "");
 
       if (mode === "personal") {
-        // Parse and compute consistently
+ 
         const income = toNum(personalData.income);
         const expenditure = toNum(personalData.expenditure);
         const invest = toNum(personalData.invest);
@@ -169,13 +169,12 @@ function App() {
         const save = toNum(personalData.save);
         const years = Math.trunc(toNum(personalData.years));
 
-        // Build line data
         generateCompoundInterestData(invest, years);
         const compoundT = calculateCompoundAfterT(invest, years);
 
         const excess = income - (expenditure + invest + donate + save);
 
-        // Ensure every datum has the same numeric keys: income, compound, value
+
         const bars = [
           { name: "Income & Compound", income, compound: compoundT, value: 0 },
           {
@@ -196,7 +195,7 @@ function App() {
         ];
         setBarData(bars);
 
-        // Only show charts when inputs are valid enough to render meaningfully
+        
         const hasValid = invest > 0 && years > 0;
         setShowCharts(hasValid);
       } else {
@@ -206,7 +205,7 @@ function App() {
       console.error(err);
       alert("Error connecting to AI backend.");
     }
-  }; // Resets and conditions ensure personal flow renders charts only when valid. [web:16][web:34]
+  }; 
 
   // ---------- Screens ----------
 
