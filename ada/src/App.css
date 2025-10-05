@@ -186,11 +186,11 @@ body, html {
   flex-direction: column;
   align-items: center;
   background: white;
-  padding: 24px;
+  padding: 32px 24px;
   border-radius: 16px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 90%;
-  max-width: 700px;
+  max-width: 750px;
 }
 
 .chart-container h2 {
@@ -199,6 +199,26 @@ body, html {
   text-align: center;
 }
 
+/* Ensure chart container text isn’t clipped */
+.recharts-wrapper {
+  overflow: visible !important;
+}
+
+.recharts-cartesian-axis-tick text {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  fill: #333;
+}
+
+.recharts-tooltip-label {
+  font-weight: 600;
+}
+
+.recharts-tooltip-item {
+  font-size: 0.9rem;
+}
+
+/* Back button styling */
 .back-btn {
   margin-top: 20px;
   background-color: #007aff;

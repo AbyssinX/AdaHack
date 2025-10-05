@@ -180,9 +180,14 @@ function App() {
         ) : (
           <div className="chart-container">
             <h2>Compound Interest Growth (8% Annual Return)</h2>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={chartData}>
+
+            <ResponsiveContainer width="100%" height={420}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 20, right: 40, left: 60, bottom: 40 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
+
                 <XAxis
                   dataKey="year"
                   label={{
@@ -190,18 +195,35 @@ function App() {
                     position: "insideBottom",
                     offset: -5,
                   }}
+                  tick={{ fontSize: 12 }}
+                  interval={4} /* show every 4 years for readability */
+                  minTickGap={10}
                 />
-                <YAxis tickFormatter={(v) => `$${v.toLocaleString()}`} />
-                <Tooltip formatter={(v) => `$${v.toLocaleString()}`} />
+
+                <YAxis
+                  tickFormatter={(v) => `$${v.toLocaleString()}`}
+                  tick={{ fontSize: 12 }}
+                  width={100}
+                  tickMargin={10}
+                  domain={[0, "auto"]}
+                />
+
+                <Tooltip
+                  formatter={(v) => `$${v.toLocaleString()}`}
+                  labelFormatter={(l) => `Year ${l}`}
+                />
+
                 <Line
                   type="monotone"
                   dataKey="value"
                   stroke="#007aff"
                   strokeWidth={3}
-                  dot={false}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
+
             <button className="back-btn" onClick={() => setChartData(null)}>
               Back to Form
             </button>
