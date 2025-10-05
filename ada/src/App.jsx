@@ -150,8 +150,9 @@ function App() {
             income: Number(personalData.income) || 0,
             compound: compoundT,
           },
-          { name: "Expenditure", value: Number(personalData.expenditure) || 0 },
-          { name: "Investment", value: Number(personalData.invest) || 0 },
+          { name: 'Necessary Expenditure', value: Number(personalData.expenditure) || 0 },
+          { name: 'Excess', value: (Number(personalData.income) - (Number(personalData.expenditure) + Number(personalData.invest) + Number(personalData.donate) + Number(personalData.save))) || 0},
+          { name: 'Investment', value: Number(personalData.invest) || 0 },
           { name: "Donation", value: Number(personalData.donate) || 0 },
           { name: "Savings", value: Number(personalData.save) || 0 },
         ]);
@@ -286,7 +287,7 @@ function App() {
                   />
                 </label>
                 <label>
-                  Expenditure (£):
+                  Necessary Expenditure (£):
                   <input
                     type="number"
                     name="expenditure"
