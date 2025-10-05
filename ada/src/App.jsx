@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -15,12 +15,63 @@ function App() {
   const [query, setQuery] = useState("");
   const [personalData, setPersonalData] = useState({
     income: "",
-    debt: "",
+    expenditure: "",
     invest: "",
     donate: "",
     save: "",
   });
   const [chartData, setChartData] = useState(null);
+
+  const TYPING_TEXTS = [
+    "Why do BOE rates affect mortgages?",
+    "What is a Stocks and Shares ISA?",
+    "When should I remortgage in the UK?",
+    "How to budget with UK taxes effectively?",
+    "Where to invest for long-term UK growth?",
+  ];
+
+  function TypingText() {
+    const [textIndex, setTextIndex] = useState(0);
+    const [displayedText, setDisplayedText] = useState("");
+    const [typing, setTyping] = useState(true);
+
+    useEffect(() => {
+      const currentText = TYPING_TEXTS[textIndex];
+      let timeout;
+
+      if (typing) {
+        // Typing characters one by one
+        if (displayedText.length < currentText.length) {
+          timeout = setTimeout(() => {
+            setDisplayedText(currentText.slice(0, displayedText.length + 1));
+          }, 80); // typing speed
+        } else {
+          // Pause before deleting
+          timeout = setTimeout(() => setTyping(false), 2000);
+        }
+      } else {
+        // Deleting characters one by one
+        if (displayedText.length > 0) {
+          timeout = setTimeout(() => {
+            setDisplayedText(currentText.slice(0, displayedText.length - 1));
+          }, 50); // deleting speed
+        } else {
+          // Move to next text
+          setTextIndex((prev) => (prev + 1) % TYPING_TEXTS.length);
+          setTyping(true);
+        }
+      }
+
+      return () => clearTimeout(timeout);
+    }, [displayedText, typing, textIndex]);
+
+    return (
+      <h2 className="typing-text">
+        {displayedText}
+        <span className="cursor">|</span>
+      </h2>
+    );
+  }
 
   // for general ai
   const handleGeneralAI = (e) => {
@@ -74,6 +125,7 @@ function App() {
     return (
       <div className="hero no-scroll">
         <h1>Your Personal Financial Advisor</h1>
+        <TypingText />
         <div className="hero-buttons">
           <button
             className="hero-btn general"
@@ -135,12 +187,12 @@ function App() {
                     />
                   </label>
                   <label>
-                    Debt (£):
+                    Monthly Expenditure (£):
                     <input
                       type="number"
-                      name="debt"
-                      placeholder="Your total debt"
-                      value={personalData.debt}
+                      name="expenditure"
+                      placeholder="Your monthly expenditure"
+                      value={personalData.expenditure}
                       onChange={handlePersonalChange}
                     />
                   </label>
