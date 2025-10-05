@@ -288,3 +288,98 @@ body, html {
   0%, 50%, 100% { opacity: 1; }
   25%, 75% { opacity: 0; }
 }
+
+
+
+
+.main-layout {
+  position: relative;
+  flex: 1;
+  display: flex;
+  height: 100%;
+}
+
+/* ---------- Top-left compact parameters panel ---------- */
+.inputs-box {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  width: 180px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputs-box h3 {
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
+  color: #007aff;
+}
+
+.inputs-box input {
+  padding: 4px 6px;
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.inputs-box button {
+  margin-top: 8px;
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.inputs-box button:hover {
+  background: #005fcc;
+}
+
+/* ---------- Charts on middle-right ---------- */
+.chart-area {
+  margin-left: auto;
+  margin-right: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60%;
+}
+
+.chart-container {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  max-width: 700px;
+  width: 100%;
+}
+
+.chart-container h2 {
+  text-align: center;
+  color: #007aff;
+  margin: 10px 0;
+}
+
+
+
+
+
+/* Make the compound interest bar semi-transparent with a subtle pattern */
+.recharts-rectangle.compound-bar {
+  fill: url(#compoundPattern);
+  stroke: #00c49f;
+  stroke-width: 1;
+  opacity: 0.8;
+}
+
+/* Optional: Hover effect to highlight compound bar */
+.recharts-rectangle.compound-bar:hover {
+  opacity: 1;
+  stroke-width: 2;
+}

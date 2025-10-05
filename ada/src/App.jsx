@@ -7,6 +7,9 @@ import {
   Tooltip,
   CartesianGrid,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend,
 } from "recharts";
 import "./App.css";
 
@@ -19,9 +22,14 @@ function App() {
     invest: "",
     donate: "",
     save: "",
+    years: "",          // 👈 new field for time input
   });
-  const [chartData, setChartData] = useState(null);
 
+  const [chartData, setChartData] = useState(null);   // for line chart
+  const [barData, setBarData] = useState([]);         // for financial breakdown
+  const [showCharts, setShowCharts] = useState(false); // page toggle
+
+  // ------------------- Typing Text for Hero -------------------
   const TYPING_TEXTS = [
     "Why do BOE rates affect mortgages?",
     "What is a Stocks and Shares ISA?",
@@ -40,23 +48,19 @@ function App() {
       let timeout;
 
       if (typing) {
-        // Typing characters one by one
         if (displayedText.length < currentText.length) {
           timeout = setTimeout(() => {
             setDisplayedText(currentText.slice(0, displayedText.length + 1));
-          }, 80); // typing speed
+          }, 80);
         } else {
-          // Pause before deleting
           timeout = setTimeout(() => setTyping(false), 2000);
         }
       } else {
-        // Deleting characters one by one
         if (displayedText.length > 0) {
           timeout = setTimeout(() => {
             setDisplayedText(currentText.slice(0, displayedText.length - 1));
-          }, 50); // deleting speed
+          }, 50);
         } else {
-          // Move to next text
           setTextIndex((prev) => (prev + 1) % TYPING_TEXTS.length);
           setTyping(true);
         }
@@ -73,22 +77,13 @@ function App() {
     );
   }
 
-  // for general ai
-  const handleGeneralAI = (e) => {
-    e.preventDefault();
-    if (query.trim()) {
-      alert(`General AI response for: ${query}`);
-      // Later: replace with actual AI API call
-    }
-  };
-
-  // Handle input change for personal data
+  // ------------------- Handlers -------------------
   const handlePersonalChange = (e) => {
     const { name, value } = e.target;
     setPersonalData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Generate compound interest data
+  // Generate compound interest data for line chart
   const generateCompoundInterestData = (monthlyInvest) => {
     const P = parseFloat(monthlyInvest);
     if (!P || P <= 0) {
@@ -96,8 +91,8 @@ function App() {
       return;
     }
 
-    const r = 0.08; // 8% annual
-    const n = 12; // monthly
+    const r = 0.08;  // annual interest
+    const n = 12;
     const years = 30;
     const data = [];
 
@@ -109,34 +104,56 @@ function App() {
     setChartData(data);
   };
 
-  // Unified handler for personal form + AI query
-  const handlePersonalAI = (e) => {
-    e.preventDefault();
-    generateCompoundInterestData(personalData.invest);
+  // Calculate compound interest after t years for bar chart
+  const calculateCompoundAfterT = (monthlyInvest, years) => {
+    const P = parseFloat(monthlyInvest);
+    const T = parseInt(years);
+    if (!P || !T || P <= 0 || T <= 0) return 0;
 
-    if (query.trim()) {
-      alert(`AI response for: ${query}`);
-      // replace with actual AI call
-    }
+    const r = 0.08;
+    const n = 12;
+    const amount = P * ((Math.pow(1 + r / n, n * T) - 1) / (r / n));
+    return Math.round(amount);
   };
 
-  // HERO SCREEN
+  const handlePersonalAI = (e) => {
+    e.preventDefault();
+
+    // Generate line chart for full 30 years
+    generateCompoundInterestData(personalData.invest);
+
+    // Compute compound after user-defined time
+    const compoundT = calculateCompoundAfterT(
+      personalData.invest,
+      personalData.years
+    );
+
+    // Update financial breakdown
+    setBarData([
+      { name: `Compound Interest\n(after ${personalData.years} yrs)`, amount: compoundT },
+      { name: "Income", amount: Number(personalData.income) || 0 },
+      { name: "Expenditure", amount: Number(personalData.expenditure) || 0 },
+      { name: "Investment", amount: Number(personalData.invest) || 0 },
+      { name: "Donation", amount: Number(personalData.donate) || 0 },
+      { name: "Savings", amount: Number(personalData.save) || 0 },
+    ]);
+
+    setShowCharts(true);
+  };
+
+  // ------------------- Screens -------------------
+
+  // HERO
   if (!mode) {
     return (
-      <div className="hero no-scroll">
+      <div className="hero">
         <h1>Your Personal Financial Advisor</h1>
         <TypingText />
         <div className="hero-buttons">
-          <button
-            className="hero-btn general"
-            onClick={() => setMode("general")}
-          >
+          <button className="hero-btn general" onClick={() => setMode("general")}>
             General
           </button>
-          <button
-            className="hero-btn personal"
-            onClick={() => setMode("personal")}
-          >
+          <button className="hero-btn personal" onClick={() => setMode("personal")}>
             Personal
           </button>
         </div>
@@ -144,178 +161,179 @@ function App() {
     );
   }
 
-  // MAIN SECTION
+  // CHARTS PAGE
+  if (showCharts) {
+    return (
+      <div className="chart-page">
+        <h2>Financial Overview</h2>
+
+        {/* Bar Chart */}
+        <div className="chart-container">
+        <h3>Financial Breakdown</h3>
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={barData}>
+            
+            <defs>
+              <pattern
+                id="compoundPattern"
+                patternUnits="userSpaceOnUse"
+                width={6}
+                height={6}
+              >
+                <rect width="6" height="6" fill="#ccf5e1" /> {/* light green background */}
+                <path d="M0,0 L6,6" stroke="#00c49f" strokeWidth="1" />
+              </pattern>
+            </defs>
+
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
+            <Legend />
+
+            {/* For the Income category, show two stacked bars */}
+            <Bar dataKey="income" fill="#007aff" stackId="incomeStack" name="Income" />
+            <Bar
+              dataKey="compound"
+              fill="#00c49f"
+              stackId="incomeStack"
+              name={`Compound Interest (after ${personalData.years} yrs)`}
+            />
+
+            {/* For other categories use a single bar */}
+            <Bar dataKey="value" fill="#8884d8" name="Other Categories" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+
+        {/* Line Chart */}
+        <div className="chart-container">
+          <h3>Investment Growth Over 30 Years</h3>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 20, right: 40, left: 40, bottom: 40 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" label={{ value: "Years", position: "insideBottom", offset: -5 }} />
+              <YAxis tickFormatter={(v) => `£${v.toLocaleString()}`} />
+              <Tooltip formatter={(v) => `£${v.toLocaleString()}`} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#007aff"
+                strokeWidth={3}
+                dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <button className="back-btn" onClick={() => setShowCharts(false)}>
+          Back to Form
+        </button>
+      </div>
+    );
+  }
+
+  // PERSONAL FORM PAGE
   return (
     <div className="app-container">
       <header className="header">
         <button
           className={mode === "personal" ? "active" : ""}
-          onClick={() => {
-            setMode("personal");
-            setChartData(null);
-          }}
+          onClick={() => setMode("personal")}
         >
           Personal
         </button>
         <button
           className={mode === "general" ? "active" : ""}
-          onClick={() => {
-            setMode("general");
-            setChartData(null);
-          }}
+          onClick={() => setMode("general")}
         >
           General
         </button>
       </header>
 
       <main className="main-content">
-        {!chartData ? (
-          mode === "personal" ? (
-            <form className="personal-form" onSubmit={handlePersonalAI}>
-              <div className="form-sections">
-                {/* LEFT – Personal inputs */}
-                <div className="personal-inputs">
-                  <h2>Personal Financial Info</h2>
-                  <label>
-                    Income (£):
-                    <input
-                      type="number"
-                      name="income"
-                      placeholder="Your monthly income"
-                      value={personalData.income}
-                      onChange={handlePersonalChange}
-                    />
-                  </label>
-                  <label>
-                    Monthly Expenditure (£):
-                    <input
-                      type="number"
-                      name="expenditure"
-                      placeholder="Your monthly expenditure"
-                      value={personalData.expenditure}
-                      onChange={handlePersonalChange}
-                    />
-                  </label>
-                  <label>
-                    Amount to Invest (£/month):
-                    <input
-                      type="number"
-                      name="invest"
-                      placeholder="Amount to invest monthly"
-                      value={personalData.invest}
-                      onChange={handlePersonalChange}
-                    />
-                  </label>
-                  <label>
-                    Amount to Donate (£):
-                    <input
-                      type="number"
-                      name="donate"
-                      placeholder="Amount to donate"
-                      value={personalData.donate}
-                      onChange={handlePersonalChange}
-                    />
-                  </label>
-                  <label>
-                    Monthly Savings (£):
-                    <input
-                      type="number"
-                      name="save"
-                      placeholder="Amount saved monthly"
-                      value={personalData.save}
-                      onChange={handlePersonalChange}
-                    />
-                  </label>
-                </div>
+        <form className="personal-form" onSubmit={handlePersonalAI}>
+          <div className="form-sections">
+            {/* Inputs on the top-left */}
+            <div className="personal-inputs">
+              <h2>Personal Info</h2>
+              <label>
+                Income (£):
+                <input
+                  type="number"
+                  name="income"
+                  value={personalData.income}
+                  onChange={handlePersonalChange}
+                />
+              </label>
+              <label>
+                Expenditure (£):
+                <input
+                  type="number"
+                  name="expenditure"
+                  value={personalData.expenditure}
+                  onChange={handlePersonalChange}
+                />
+              </label>
+              <label>
+                Investment (£/month):
+                <input
+                  type="number"
+                  name="invest"
+                  value={personalData.invest}
+                  onChange={handlePersonalChange}
+                />
+              </label>
+              <label>
+                Time (years):
+                <input
+                  type="number"
+                  name="years"
+                  placeholder="e.g., 5"
+                  value={personalData.years}
+                  onChange={handlePersonalChange}
+                />
+              </label>
+              <label>
+                Donation (£):
+                <input
+                  type="number"
+                  name="donate"
+                  value={personalData.donate}
+                  onChange={handlePersonalChange}
+                />
+              </label>
+              <label>
+                Savings (£/month):
+                <input
+                  type="number"
+                  name="save"
+                  value={personalData.save}
+                  onChange={handlePersonalChange}
+                />
+              </label>
+            </div>
 
-                {/* RIGHT – AI chatbox */}
-                <div className="ai-chatbox">
-                  <h2>Ask Your AI Advisor</h2>
-                  <input
-                    type="text"
-                    placeholder="Ask a finance question..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Unified button */}
-              <button type="submit" className="submit-ai-btn">
-                Submit & Ask AI
-              </button>
-            </form>
-          ) : (
-            <form
-              className="personal-form"
-              onSubmit={(e) => handleGeneralAI(e)}
-            >
-              <div className="form-sections">
-                <div
-                  className="ai-chatbox"
-                  style={{ flex: 1, borderLeft: "none", paddingLeft: 0 }}
-                >
-                  <h2>Ask Your AI Advisor</h2>
-                  <input
-                    type="text"
-                    placeholder="Ask a general finance question..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <button type="submit" className="submit-ai-btn">
-                Ask AI
-              </button>
-            </form>
-          )
-        ) : (
-          <div className="chart-container">
-            <h2>Compound Interest Growth (8% Annual Return)</h2>
-            <ResponsiveContainer width="100%" height={420}>
-              <LineChart
-                data={chartData}
-                margin={{ top: 20, right: 40, left: 60, bottom: 40 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="year"
-                  label={{
-                    value: "Years",
-                    position: "insideBottom",
-                    offset: -5,
-                  }}
-                  tick={{ fontSize: 12 }}
-                  interval={4}
-                  minTickGap={10}
-                />
-                <YAxis
-                  tickFormatter={(v) => `£${v.toLocaleString()}`}
-                  tick={{ fontSize: 12 }}
-                  width={100}
-                  tickMargin={10}
-                  domain={[0, "auto"]}
-                />
-                <Tooltip
-                  formatter={(v) => `£${v.toLocaleString()}`}
-                  labelFormatter={(l) => `Year ${l}`}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#007aff"
-                  strokeWidth={3}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            <button className="back-btn" onClick={() => setChartData(null)}>
-              Back to Form
-            </button>
+            {/* AI Chatbox */}
+            <div className="ai-chatbox">
+              <h2>Ask AI Advisor</h2>
+              <input
+                type="text"
+                placeholder="Ask a finance question..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
           </div>
-        )}
+
+          <button type="submit" className="submit-ai-btn">
+            Submit & View Charts
+          </button>
+        </form>
       </main>
     </div>
   );
